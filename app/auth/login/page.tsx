@@ -12,16 +12,19 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 type LoginPageProps = {
-  searchParams?: Record<string, string | string[] | undefined>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const params = searchParams ?? {};
+  const params = (await searchParams) ?? {};
+
   const redirectTo =
     typeof params.redirectTo === "string"
       ? sanitizeRedirectPath(params.redirectTo)
       : undefined;
-  const error = typeof params.error === "string" ? params.error : undefined;
+
+  const error =
+    typeof params.error === "string" ? params.error : undefined;
 
   return (
     <AuthShell
