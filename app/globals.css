@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  --background: #f6f8fb;
+  --foreground: #0f172a;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at top, rgba(16, 185, 129, 0.08), transparent 24%),
+    linear-gradient(180deg, #fbfdff 0%, #f3f7fb 100%);
+  color: var(--foreground);
+  font-family: "IBM Plex Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
