@@ -18,8 +18,8 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 type BookingPaymentPageProps = {
-  params: { bookingId: string };
-  searchParams?: Record<string, string | string[] | undefined>;
+  params: Promise<{ bookingId: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
 function getStatusMessage(status?: string) {
@@ -42,7 +42,9 @@ export default async function BookingPaymentPage({
   params,
   searchParams,
 }: BookingPaymentPageProps) {
-  const { bookingId } = params;
+  const { bookingId } = await params;
+  const resolvedSearchParams = (await searchParams) ?? {};
+
   const patient = await requirePatientUser(`/bookings/${bookingId}/payment`);
   const payment = await prepareBookingForPayment(bookingId, patient.id);
 
@@ -51,12 +53,17 @@ export default async function BookingPaymentPage({
   }
 
   const status =
-    typeof searchParams?.status === "string" ? searchParams.status : undefined;
+    typeof resolvedSearchParams.status === "string"
+      ? resolvedSearchParams.status
+      : undefined;
+
   const statusMessage = getStatusMessage(status);
+
   const showHostedForm =
     payment.holdActive &&
     (payment.bookingStatus === BookingStatus.HOLD ||
       payment.bookingStatus === BookingStatus.PAYMENT_PENDING);
+
   const providerConfig = showHostedForm
     ? buildCardPaymentProviderConfig({
         amountHalalas: payment.amountHalalas,
