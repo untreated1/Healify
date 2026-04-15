@@ -38,7 +38,10 @@ export function sanitizeRedirectPath(value?: string | null) {
   try {
     const parsed = new URL(path, "http://healify.local");
 
-    if (parsed.origin !== "http://healify.local" || !parsed.pathname.startsWith("/")) {
+    if (
+      parsed.origin !== "http://healify.local" ||
+      !parsed.pathname.startsWith("/")
+    ) {
       return "/";
     }
 
@@ -59,7 +62,7 @@ function getSessionSecret() {
 }
 
 export async function readSessionPayload(): Promise<SessionClaims | null> {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
 
   if (!token) {
@@ -97,7 +100,7 @@ export async function createSessionToken(payload: SessionPayload) {
 
 export async function setSessionCookie(payload: SessionPayload) {
   const token = await createSessionToken(payload);
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
 
   cookieStore.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
@@ -109,7 +112,7 @@ export async function setSessionCookie(payload: SessionPayload) {
 }
 
 export async function clearSessionCookie() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
 
   cookieStore.set(SESSION_COOKIE_NAME, "", {
     httpOnly: true,
