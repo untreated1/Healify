@@ -9,21 +9,40 @@ function normalizeEmail(email: string) {
   return email.trim().toLowerCase();
 }
 
-export function validateAuthPayload(payload: AuthPayload, mode: "login" | "signup") {
+type AuthValidationSuccess = {
+  ok: true;
+  value: {
+    email: string;
+    password: string;
+    fullName?: string;
+  };
+};
+
+type AuthValidationFailure = {
+  ok: false;
+  error: "missing-email" | "weak-password" | "missing-name";
+};
+
+type AuthValidationResult = AuthValidationSuccess | AuthValidationFailure;
+
+export function validateAuthPayload(
+  payload: AuthPayload,
+  mode: "login" | "signup",
+): AuthValidationResult {
   const email = normalizeEmail(payload.email);
   const password = payload.password.trim();
   const fullName = payload.fullName?.trim();
 
   if (!email) {
-    return { ok: false, error: "missing-email" as const };
+    return { ok: false, error: "missing-email" };
   }
 
   if (password.length < 8) {
-    return { ok: false, error: "weak-password" as const };
+    return { ok: false, error: "weak-password" };
   }
 
   if (mode === "signup" && !fullName) {
-    return { ok: false, error: "missing-name" as const };
+    return { ok: false, error: "missing-name" };
   }
 
   return {
@@ -38,32 +57,34 @@ export function validateAuthPayload(payload: AuthPayload, mode: "login" | "signu
 
 export async function registerPatient(payload: AuthPayload) {
   const parsed = validateAuthPayload(payload, "signup");
+
   if (!parsed.ok) {
     return {
-      ok: false,
+      ok: false as const,
       error: parsed.error,
     };
   }
 
+  const { email, password, fullName } = parsed.value;
+
   const existing = await prisma.user.findUnique({
-    where: {
-      email: parsed.value.email,
-    },
+    where: { email },
     select: { id: true },
   });
 
   if (existing) {
     return {
-      ok: false,
-      error: "email-in-use",
+      ok: false as const,
+      error: "email-in-use" as const,
     };
   }
 
-  const passwordHash = await bcrypt.hash(parsed.value.password, 12);
+  const passwordHash = await bcrypt.hash(password, 12);
+
   const user = await prisma.user.create({
     data: {
-      fullName: parsed.value.fullName!,
-      email: parsed.value.email,
+      fullName: fullName!,
+      email,
       passwordHash,
       role: UserRole.PATIENT,
       patientProfile: {
@@ -79,24 +100,25 @@ export async function registerPatient(payload: AuthPayload) {
   });
 
   return {
-    ok: true,
+    ok: true as const,
     user,
   };
 }
 
 export async function loginPatient(payload: AuthPayload) {
   const parsed = validateAuthPayload(payload, "login");
+
   if (!parsed.ok) {
     return {
-      ok: false,
+      ok: false as const,
       error: parsed.error,
     };
   }
 
+  const { email, password } = parsed.value;
+
   const user = await prisma.user.findUnique({
-    where: {
-      email: parsed.value.email,
-    },
+    where: { email },
     select: {
       id: true,
       fullName: true,
@@ -108,32 +130,29 @@ export async function loginPatient(payload: AuthPayload) {
 
   if (!user?.passwordHash) {
     return {
-      ok: false,
-      error: "invalid-credentials",
+      ok: false as const,
+      error: "invalid-credentials" as const,
     };
   }
 
   if (user.role !== UserRole.PATIENT) {
     return {
-      ok: false,
-      error: "patient-only",
+      ok: false as const,
+      error: "patient-only" as const,
     };
   }
 
-  const passwordMatches = await bcrypt.compare(
-    parsed.value.password,
-    user.passwordHash,
-  );
+  const passwordMatches = await bcrypt.compare(password, user.passwordHash);
 
   if (!passwordMatches) {
     return {
-      ok: false,
-      error: "invalid-credentials",
+      ok: false as const,
+      error: "invalid-credentials" as const,
     };
   }
 
   return {
-    ok: true,
+    ok: true as const,
     user: {
       id: user.id,
       fullName: user.fullName,
