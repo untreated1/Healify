@@ -11,16 +11,16 @@ import {
 } from "@/services/therapists";
 
 type TherapistProfilePageProps = {
-  params: {
+  params: Promise<{
     slug: string;
-  };
-  searchParams?: Record<string, string | string[] | undefined>;
+  }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export async function generateMetadata({
   params,
 }: TherapistProfilePageProps): Promise<Metadata> {
-  const { slug } = params;
+  const { slug } = await params;
   const profile = await getPublicTherapistProfile(slug);
 
   if (!profile) {
@@ -42,19 +42,21 @@ export default async function TherapistProfilePage({
   params,
   searchParams,
 }: TherapistProfilePageProps) {
-  const { slug } = params;
-  const paramsData = searchParams ?? {};
-  const bookingError =
-    typeof paramsData.bookingError === "string"
-      ? paramsData.bookingError
-      : undefined;
+  const { slug } = await params;
+  const resolvedSearchParams = (await searchParams) ?? {};
   const profile = await getPublicTherapistProfile(slug);
-  const messages = arMessages.therapists.profile;
-  const browseMessages = arMessages.therapists.browse;
 
   if (!profile) {
     notFound();
   }
+
+  const profileMessages = arMessages.therapists.profile;
+  const browseMessages = arMessages.therapists.browse;
+
+  const bookingError =
+    typeof resolvedSearchParams.bookingError === "string"
+      ? resolvedSearchParams.bookingError
+      : undefined;
 
   return (
     <div className="py-8 sm:py-10">
@@ -63,16 +65,16 @@ export default async function TherapistProfilePage({
           href="/therapists"
           className="inline-flex rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 transition hover:bg-slate-50"
         >
-          {messages.backToBrowse}
+          {profileMessages.backToBrowse}
         </Link>
 
         {bookingError ? (
           <div className="rounded-[24px] border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-700">
-            <p className="font-medium">{messages.bookingErrorTitle}</p>
+            <p className="font-medium">{profileMessages.bookingErrorTitle}</p>
             <p className="mt-2">
               {bookingError === "slot-expired"
-                ? messages.bookingErrorExpired
-                : messages.bookingErrorSlotUnavailable}
+                ? profileMessages.bookingErrorExpired
+                : profileMessages.bookingErrorSlotUnavailable}
             </p>
           </div>
         ) : null}
@@ -124,16 +126,21 @@ export default async function TherapistProfilePage({
                 </div>
 
                 <div className="rounded-2xl bg-white p-4">
-                  <dt className="text-slate-500">{browseMessages.experienceLabel}</dt>
+                  <dt className="text-slate-500">
+                    {browseMessages.experienceLabel}
+                  </dt>
                   <dd className="mt-1 font-semibold text-slate-900">
-                    {profile.yearsOfExperienceLabel} {messages.experienceSuffix}
+                    {profile.yearsOfExperienceLabel}{" "}
+                    {profileMessages.experienceSuffix}
                   </dd>
                 </div>
 
                 <div className="rounded-2xl bg-white p-4">
-                  <dt className="text-slate-500">{browseMessages.nextAvailable}</dt>
+                  <dt className="text-slate-500">
+                    {browseMessages.nextAvailable}
+                  </dt>
                   <dd className="mt-1 font-semibold text-slate-900">
-                    {profile.nextAvailableLabel ?? messages.noAvailability}
+                    {profile.nextAvailableLabel ?? profileMessages.noAvailability}
                   </dd>
                 </div>
               </dl>
@@ -148,7 +155,7 @@ export default async function TherapistProfilePage({
             <div className="space-y-6">
               <section className="rounded-[28px] border border-slate-200 p-6">
                 <h2 className="text-xl font-semibold text-slate-950">
-                  {messages.specializationsTitle}
+                  {profileMessages.specializationsTitle}
                 </h2>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {profile.specializations.map((specialization) => (
@@ -164,7 +171,7 @@ export default async function TherapistProfilePage({
 
               <section className="rounded-[28px] border border-slate-200 p-6">
                 <h2 className="text-xl font-semibold text-slate-950">
-                  {messages.aboutTitle}
+                  {profileMessages.aboutTitle}
                 </h2>
                 <p className="mt-4 text-sm leading-8 text-slate-700">
                   {profile.bioAr}
@@ -174,7 +181,7 @@ export default async function TherapistProfilePage({
               {profile.credentialsAr ? (
                 <section className="rounded-[28px] border border-slate-200 p-6">
                   <h2 className="text-xl font-semibold text-slate-950">
-                    {messages.credentialsTitle}
+                    {profileMessages.credentialsTitle}
                   </h2>
                   <p className="mt-4 text-sm leading-8 text-slate-700">
                     {profile.credentialsAr}
@@ -185,7 +192,7 @@ export default async function TherapistProfilePage({
               <div className="grid gap-6 md:grid-cols-2">
                 <section className="rounded-[28px] border border-slate-200 p-6">
                   <h2 className="text-xl font-semibold text-slate-950">
-                    {messages.languagesTitle}
+                    {profileMessages.languagesTitle}
                   </h2>
                   <div className="mt-4 flex flex-wrap gap-2">
                     {profile.languages.map((language) => (
@@ -201,7 +208,7 @@ export default async function TherapistProfilePage({
 
                 <section className="rounded-[28px] border border-slate-200 p-6">
                   <h2 className="text-xl font-semibold text-slate-950">
-                    {messages.sessionModesTitle}
+                    {profileMessages.sessionModesTitle}
                   </h2>
                   <div className="mt-4 flex flex-wrap gap-2">
                     {profile.sessionModes.map((mode) => (
@@ -219,10 +226,10 @@ export default async function TherapistProfilePage({
               <section className="rounded-[28px] border border-slate-200 p-6">
                 <div className="space-y-2">
                   <h2 className="text-xl font-semibold text-slate-950">
-                    {messages.slotSelectionTitle}
+                    {profileMessages.slotSelectionTitle}
                   </h2>
                   <p className="text-sm text-slate-600">
-                    {messages.slotSelectionHint}
+                    {profileMessages.slotSelectionHint}
                   </p>
                 </div>
 
@@ -236,14 +243,14 @@ export default async function TherapistProfilePage({
                       >
                         <span className="block">{slot.formattedLabel}</span>
                         <span className="mt-2 block text-xs text-emerald-800">
-                          {messages.selectSlotCta}
+                          {profileMessages.selectSlotCta}
                         </span>
                       </Link>
                     ))}
                   </div>
                 ) : (
                   <p className="mt-5 text-sm leading-7 text-slate-600">
-                    {messages.noAvailability}
+                    {profileMessages.noAvailability}
                   </p>
                 )}
               </section>
