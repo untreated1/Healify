@@ -23,18 +23,9 @@ type BookingPaymentPageProps = {
 };
 
 function getStatusMessage(status?: string) {
-  if (status === "failed") {
-    return arMessages.bookings.paymentFailureNotice;
-  }
-
-  if (status === "expired") {
-    return arMessages.bookings.paymentExpiredNotice;
-  }
-
-  if (status === "processing") {
-    return arMessages.bookings.paymentProcessingNotice;
-  }
-
+  if (status === "failed") return arMessages.bookings.paymentFailureNotice;
+  if (status === "expired") return arMessages.bookings.paymentExpiredNotice;
+  if (status === "processing") return arMessages.bookings.paymentProcessingNotice;
   return null;
 }
 
