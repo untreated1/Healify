@@ -7,7 +7,9 @@ export async function POST(request: Request) {
   const fullName = String(formData.get("fullName") ?? "");
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
-  const redirectTo = sanitizeRedirectPath(String(formData.get("redirectTo") ?? "/"));
+  const redirectTo = sanitizeRedirectPath(
+    String(formData.get("redirectTo") ?? "/"),
+  );
 
   const result = await registerPatient({
     fullName,
@@ -16,7 +18,7 @@ export async function POST(request: Request) {
     redirectTo,
   });
 
-  if (!result.ok) {
+  if (!result.ok || !result.user) {
     const signupUrl = new URL("/auth/signup", request.url);
     signupUrl.searchParams.set("error", result.error ?? "unknown");
 

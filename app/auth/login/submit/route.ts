@@ -6,7 +6,9 @@ export async function POST(request: Request) {
   const formData = await request.formData();
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
-  const redirectTo = sanitizeRedirectPath(String(formData.get("redirectTo") ?? "/"));
+  const redirectTo = sanitizeRedirectPath(
+    String(formData.get("redirectTo") ?? "/"),
+  );
 
   const result = await loginPatient({
     email,
@@ -14,7 +16,7 @@ export async function POST(request: Request) {
     redirectTo,
   });
 
-  if (!result.ok) {
+  if (!result.ok || !result.user) {
     const loginUrl = new URL("/auth/login", request.url);
     loginUrl.searchParams.set("error", result.error ?? "unknown");
 
